@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
 import StockChart from '../components/StockChart';
-import NewsFeed from '../components/NewsFeed';
+import StockNews from '../components/StockNews';
 import './AssetDetailsPage.css';
 
 export default function AssetDetailsPage() {
@@ -92,10 +92,7 @@ export default function AssetDetailsPage() {
         </div>
 
         <div className="asset-side-col">
-          <div className="glass-card related-news-container">
-            <h3 className="section-title"><Activity size={18} /> Market News</h3>
-            <NewsFeed compact={true} />
-          </div>
+          <StockNews symbol={quote.symbol} name={quote.name || quote.symbol} />
         </div>
       </div>
     </div>

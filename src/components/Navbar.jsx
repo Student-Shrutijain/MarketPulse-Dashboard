@@ -27,6 +27,7 @@ export default function Navbar({ onSearch }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -37,18 +38,48 @@ export default function Navbar({ onSearch }) {
   const searchRef = useRef(null);
   const profileRef = useRef(null);
   const notifRef = useRef(null);
+  const debounceTimer = useRef(null);
 
+  // Real-time Yahoo Finance search via backend
   useEffect(() => {
-    if (searchQuery.length > 0) {
-      const filtered = STOCK_SUGGESTIONS.filter(s =>
-        s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setSuggestions(filtered);
-    } else {
+    if (searchQuery.trim().length < 1) {
       setSuggestions([]);
+      return;
     }
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const res = await fetch(`http://localhost:5001/api/market/search?q=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        setSuggestions(data || []);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
   }, [searchQuery]);
+
+  // Navigate to asset page on suggestion click
+  const handleSelectSymbol = (symbol) => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSuggestions([]);
+    navigate(`/asset/${encodeURIComponent(symbol)}`);
+  };
+
+  // Handle Enter key
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && suggestions.length > 0) {
+      handleSelectSymbol(suggestions[0].symbol);
+    }
+    if (e.key === 'Escape') {
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
 
   useEffect(() => {
     const handleClick = (e) => {
