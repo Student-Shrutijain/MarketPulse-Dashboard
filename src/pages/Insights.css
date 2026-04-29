@@ -1,0 +1,123 @@
+/* ===== Insights Page ===== */
+.insights-section {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.moving-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.moving-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.moving-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.moving-indicator {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.moving-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.moving-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.moving-assets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Performance Grid */
+.perf-grid {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.perf-header {
+  display: grid;
+  grid-template-columns: 100px repeat(6, minmax(60px, 1fr));
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-secondary);
+  margin-bottom: 4px;
+  min-width: 460px;
+}
+
+.perf-period {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.perf-row {
+  display: grid;
+  grid-template-columns: 100px repeat(6, minmax(60px, 1fr));
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+  min-width: 460px;
+}
+
+.perf-row:hover {
+  background: var(--bg-tertiary);
+}
+
+.perf-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.perf-cell {
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .moving-item {
+    padding: 10px;
+  }
+
+  .moving-title {
+    font-size: 0.8125rem;
+  }
+
+  .perf-header, .perf-row {
+    grid-template-columns: 80px repeat(6, minmax(50px, 1fr));
+    min-width: 400px;
+  }
+
+  .perf-name {
+    font-size: 0.7rem;
+  }
+
+  .perf-cell {
+    font-size: 0.7rem;
+  }
+}

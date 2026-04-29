@@ -1,0 +1,157 @@
+/* ===== News Feed ===== */
+.news-feed {
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.news-filters {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-tertiary);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.news-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.news-filters .tab {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.news-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  animation: fadeIn 0.4s ease-out both;
+  cursor: pointer;
+}
+
+.news-sentiment-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.news-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.news-source {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.news-sep {
+  opacity: 0.5;
+}
+
+.news-time {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.news-tags {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.badge-sm {
+  padding: 2px 8px;
+  font-size: 0.65rem;
+}
+
+.news-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.news-read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.news-read-more:hover {
+  color: var(--accent-primary-light);
+  gap: 6px;
+}
+
+/* Compact mode for sidebar */
+.news-compact .news-item {
+  padding: 12px;
+}
+
+.news-compact .news-title {
+  font-size: 0.8125rem;
+}
+
+.news-compact .news-tags {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .news-item {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .news-title {
+    font-size: 0.8125rem;
+  }
+
+  .news-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .news-tags {
+    flex-wrap: wrap;
+  }
+
+  .badge-sm {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+  }
+}

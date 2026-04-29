@@ -1,0 +1,138 @@
+.asset-details-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.asset-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  width: fit-content;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+.asset-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 16px;
+}
+
+.asset-symbol {
+  font-size: 2rem;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.asset-name {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.asset-price-col {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.asset-price {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.asset-change {
+  font-size: 1rem;
+  padding: 4px 12px;
+}
+
+.asset-content-grid {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 24px;
+}
+
+.asset-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.asset-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-card .stat-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card .stat-value {
+  font-size: 1.25rem;
+}
+
+.asset-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.related-news-container {
+  padding: 16px;
+}
+
+.related-news-container .section-title {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 1024px) {
+  .asset-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .asset-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .asset-price-col {
+    align-items: flex-start;
+  }
+
+  .asset-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

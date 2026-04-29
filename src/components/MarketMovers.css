@@ -1,0 +1,118 @@
+/* ===== Market Movers ===== */
+.movers-section {
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.movers-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.movers-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+
+.movers-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mover-card {
+  min-width: 220px;
+  max-width: 280px;
+  flex-shrink: 0;
+  padding: 16px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.mover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.mover-symbol {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.mover-name {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.mover-badge {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.mover-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mover-price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mover-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mover-volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-primary);
+}
+
+.mover-vol-label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mover-vol-value {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .mover-card {
+    min-width: 180px;
+    max-width: 220px;
+    padding: 12px;
+  }
+
+  .mover-price {
+    font-size: 1rem;
+  }
+
+  .mover-symbol {
+    font-size: 0.8125rem;
+  }
+}

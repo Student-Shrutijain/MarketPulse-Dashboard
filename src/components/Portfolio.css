@@ -1,0 +1,160 @@
+/* ===== Portfolio ===== */
+.portfolio-section {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.portfolio-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.summary-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.summary-pct {
+  font-size: 0.75rem;
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+/* Holdings Table */
+.holdings-section {
+  overflow: hidden;
+}
+
+.add-holding-form {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.add-holding-form .input {
+  flex: 1;
+  min-width: 100px;
+}
+
+.holdings-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.holdings-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.holdings-table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-primary);
+  white-space: nowrap;
+}
+
+.holdings-table td {
+  padding: 14px 14px;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid var(--border-primary);
+  white-space: nowrap;
+}
+
+.holding-row:hover {
+  background: var(--bg-tertiary);
+}
+
+.holding-stock {
+  display: flex;
+  flex-direction: column;
+}
+
+.holding-symbol {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.holding-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .portfolio-summary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .summary-card {
+    padding: 14px;
+  }
+
+  .summary-value {
+    font-size: 1rem;
+  }
+
+  .add-holding-form {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .add-holding-form .input {
+    min-width: 80px;
+    font-size: 0.8125rem;
+    padding: 8px 10px;
+  }
+
+  .holdings-table {
+    min-width: 550px;
+  }
+
+  .holdings-table th {
+    padding: 10px 10px;
+    font-size: 0.65rem;
+  }
+
+  .holdings-table td {
+    padding: 10px 10px;
+    font-size: 0.75rem;
+  }
+}

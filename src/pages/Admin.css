@@ -1,0 +1,160 @@
+/* ===== Admin Dashboard ===== */
+.admin-header {
+  margin-bottom: 24px;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.admin-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  animation: fadeIn 0.4s ease-out both;
+  min-width: 0;
+}
+
+.admin-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.admin-stat-info {
+  min-width: 0;
+}
+
+.admin-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-stat-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 2px 0;
+}
+
+.admin-stat-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admin-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+/* Stock Views */
+.admin-stock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.admin-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.admin-stock-symbol {
+  width: 80px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.admin-stock-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.admin-stock-bar-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.admin-stock-views {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* News Moderation */
+.admin-news-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.admin-news-item:last-child {
+  border-bottom: none;
+}
+
+.admin-news-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.admin-news-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .admin-stat-value {
+    font-size: 1.125rem;
+  }
+
+  .admin-news-item {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-news-actions {
+    align-self: flex-start;
+  }
+}
