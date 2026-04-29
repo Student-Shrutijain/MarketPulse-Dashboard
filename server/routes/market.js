@@ -59,6 +59,29 @@ router.get('/overview', async (req, res) => {
   }
 });
 
+// GET /api/market/search?q=query — live symbol search for navbar
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length === 0) return res.json([]);
+
+    const result = await yahooFinance.search(q, { quotesCount: 8, newsCount: 0 });
+    const quotes = (result.quotes || [])
+      .filter(r => r.symbol && (r.quoteType === 'EQUITY' || r.quoteType === 'INDEX' || r.quoteType === 'ETF'))
+      .map(r => ({
+        symbol: r.symbol,
+        name: r.longname || r.shortname || r.symbol,
+        exchange: r.exchDisp || r.exchange || '',
+        type: r.quoteType,
+      }));
+
+    res.json(quotes);
+  } catch (error) {
+    console.error('Search error:', error.message);
+    res.json([]);
+  }
+});
+
 // GET /api/market/quote/:symbol
 router.get('/quote/:symbol', async (req, res) => {
   try {

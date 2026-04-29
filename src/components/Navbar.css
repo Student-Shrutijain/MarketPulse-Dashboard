@@ -108,6 +108,10 @@
   width: 380px;
   max-width: calc(100vw - 32px);
   padding: 8px;
+  background: var(--bg-secondary) !important;
+  backdrop-filter: blur(var(--blur-xl)) !important;
+  border: 1px solid var(--border-secondary) !important;
+  box-shadow: var(--shadow-xl) !important;
   z-index: var(--z-dropdown);
 }
 
@@ -220,6 +224,10 @@
   width: 340px;
   max-width: calc(100vw - 32px);
   padding: 16px;
+  background: var(--bg-secondary) !important;
+  backdrop-filter: blur(var(--blur-xl)) !important;
+  border: 1px solid var(--border-secondary) !important;
+  box-shadow: var(--shadow-xl) !important;
   z-index: var(--z-dropdown);
 }
 
@@ -307,6 +315,10 @@
   width: 260px;
   max-width: calc(100vw - 32px);
   padding: 16px;
+  background: var(--bg-secondary) !important;
+  backdrop-filter: blur(var(--blur-xl)) !important;
+  border: 1px solid var(--border-secondary) !important;
+  box-shadow: var(--shadow-xl) !important;
   z-index: var(--z-dropdown);
 }
 

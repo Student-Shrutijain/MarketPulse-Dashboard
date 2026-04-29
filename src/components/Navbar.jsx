@@ -150,28 +150,32 @@ export default function Navbar({ onSearch }) {
                   <input
                     type="text"
                     className="search-input"
-                    placeholder="Search stocks, indices, commodities..."
+                    placeholder="Search stocks, indices, ETFs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
                     autoFocus
                   />
                   <button className="search-close" onClick={() => { setSearchOpen(false); setSearchQuery(''); }}>
                     <X size={14} />
                   </button>
                 </div>
-                {suggestions.length > 0 && (
+                {searchLoading && (
+                  <div style={{ padding: '10px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>🔍 Searching...</div>
+                )}
+                {!searchLoading && suggestions.length > 0 && (
                   <div className="search-suggestions">
                     {suggestions.map(s => (
-                      <button key={s.symbol} className="search-suggestion" onClick={() => {
-                        onSearch?.(s.symbol);
-                        setSearchOpen(false);
-                        setSearchQuery('');
-                      }}>
-                        <span className="suggestion-symbol font-mono">{s.symbol.replace('.NS', '')}</span>
+                      <button key={s.symbol} className="search-suggestion" onClick={() => handleSelectSymbol(s.symbol)}>
+                        <span className="suggestion-symbol font-mono">{s.symbol.replace('.NS','').replace('=X','').replace('=F','')}</span>
                         <span className="suggestion-name">{s.name}</span>
+                        {s.exchange && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{s.exchange}</span>}
                       </button>
                     ))}
                   </div>
+                )}
+                {!searchLoading && searchQuery.length > 0 && suggestions.length === 0 && (
+                  <div style={{ padding: '10px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No results for "{searchQuery}"</div>
                 )}
               </div>
             )}
