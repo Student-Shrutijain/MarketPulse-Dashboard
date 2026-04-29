@@ -62,7 +62,10 @@ export default function NewsFeed({ compact = false }) {
                 <div className="news-meta">
                   <span className="news-source">{item.source}</span>
                   <span className="news-sep">·</span>
-                  <span className="news-time"><Clock size={11} /> {item.time}</span>
+                  <span className="news-time">
+                    <Clock size={11} /> 
+                    {item.time.includes('T') ? new Date(item.time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : item.time}
+                  </span>
                 </div>
                 <div className="news-tags">
                   <span className={`badge badge-sm ${getSentimentColor(item.sentiment)}`}>
@@ -76,9 +79,15 @@ export default function NewsFeed({ compact = false }) {
                 </div>
               </div>
               <h3 className="news-title">{item.title}</h3>
-              <button className="news-read-more">
+              <a 
+                href={item.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="news-read-more"
+                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
                 Read more <ExternalLink size={12} />
-              </button>
+              </a>
             </div>
           </article>
         ))}

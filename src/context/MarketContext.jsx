@@ -77,8 +77,10 @@ export function MarketProvider({ children }) {
   const [sectors, setSectors] = useState(SECTOR_DATA);
   const [marketStatus, setMarketStatus] = useState('open');
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);       // background refresh indicator
+  const [initialLoading, setInitialLoading] = useState(true); // only true on very first load
   const priceFlash = useRef({});
+  const hasFetched = useRef(false);
 
   // Simulate live price updates
   useEffect(() => {
@@ -127,24 +129,56 @@ export function MarketProvider({ children }) {
   }, []);
 
   const fetchMarketData = useCallback(async () => {
+    // Only show background spinner on re-fetches, not initial
+    if (hasFetched.current) setLoading(true);
     try {
-      setLoading(true);
-      const { data } = await axios.get(`${API}/market/overview`);
-      if (data.indices) setIndices(data.indices);
+      const [marketRes, newsRes] = await Promise.all([
+        axios.get(`${API}/market/overview`).catch(() => ({ data: {} })),
+        axios.get(`${API}/news`).catch(() => ({ data: [] }))
+      ]);
+
+      const data = marketRes.data;
+      if (data.indices) setIndices(prev => mergeWithSparklines(prev, data.indices));
       if (data.gainers) setGainers(data.gainers);
       if (data.losers) setLosers(data.losers);
       if (data.mostActive) setMostActive(data.mostActive);
-    } catch {
-      // Use demo data on failure — already initialized
+
+      if (newsRes.data && newsRes.data.length > 0) {
+        setNews(newsRes.data);
+      }
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Failed to fetch market data', err);
+      // Keep showing demo data on failure
     } finally {
       setLoading(false);
+      setInitialLoading(false);
+      hasFetched.current = true;
     }
   }, []);
+
+  // Helper: merge live prices while keeping sparklines for animation
+  function mergeWithSparklines(prev, live) {
+    const merged = { ...prev };
+    Object.keys(live).forEach(key => {
+      const existing = prev[key] || {};
+      merged[key] = {
+        ...live[key],
+        sparkline: existing.sparkline || [live[key].price],
+      };
+    });
+    return merged;
+  }
+
+  // Fetch real data on mount!
+  useEffect(() => {
+    fetchMarketData();
+  }, [fetchMarketData]);
 
   return (
     <MarketContext.Provider value={{
       indices, gainers, losers, mostActive, news, sectors,
-      marketStatus, lastUpdated, loading,
+      marketStatus, lastUpdated, loading, initialLoading,
       fetchMarketData, setNews
     }}>
       {children}

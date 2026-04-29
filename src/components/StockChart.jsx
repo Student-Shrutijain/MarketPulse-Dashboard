@@ -222,8 +222,8 @@ export default function StockChart({ symbol = 'RELIANCE.NS', name = 'Reliance In
       {/* Chart */}
       <div className="chart-body" style={{ position: 'relative' }}>
         {loading && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', zIndex: 10 }}>
-            <Loader2 className="spinner" size={32} />
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 10, display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-glass)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <Loader2 size={14} className="spinner" /> Loading...
           </div>
         )}
         <ResponsiveContainer width="100%" height={380}>

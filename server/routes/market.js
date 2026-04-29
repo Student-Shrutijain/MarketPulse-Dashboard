@@ -2,31 +2,57 @@ const express = require('express');
 const router = express.Router();
 
 const { default: YahooFinance } = require('yahoo-finance2');
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+
+// NSE stocks pool used to derive real movers
+const NSE_POOL = [
+  'RELIANCE.NS','TCS.NS','HDFCBANK.NS','INFY.NS','ICICIBANK.NS','SBIN.NS',
+  'BHARTIARTL.NS','BAJFINANCE.NS','WIPRO.NS','TATAMOTORS.NS','HCLTECH.NS',
+  'AXISBANK.NS','ADANIENT.NS','MARUTI.NS','LT.NS','SUNPHARMA.NS','NTPC.NS',
+  'ONGC.NS','POWERGRID.NS','ULTRACEMCO.NS','TITAN.NS','NESTLEIND.NS',
+  'BAJAJFINSV.NS','TECHM.NS','DIVISLAB.NS','JSWSTEEL.NS','TATACONSUM.NS',
+  'HINDALCO.NS','GRASIM.NS','COALINDIA.NS','INDUSINDBK.NS','EICHERMOT.NS',
+  'HEROMOTOCO.NS','BPCL.NS','DRREDDY.NS','CIPLA.NS','SBILIFE.NS',
+  'TATAPOWER.NS','ZOMATO.NS','IRFC.NS'
+];
 
 // GET /api/market/overview
 router.get('/overview', async (req, res) => {
   try {
-    const symbols = ['^NSEI', '^BSESN', 'GC=F', 'USDINR=X'];
-    const quotes = await yahooFinance.quote(symbols);
-    
+    const [indiceQuotes, moverQuotes] = await Promise.all([
+      yahooFinance.quote(['^NSEI', '^BSESN', 'GC=F', 'USDINR=X', 'EURINR=X', 'GBPINR=X']),
+      yahooFinance.quote(NSE_POOL)
+    ]);
+
+    // Build indices map
     const indices = {};
-    quotes.forEach(quote => {
-      indices[quote.symbol] = {
-        symbol: quote.symbol,
-        name: quote.shortName || quote.longName || quote.symbol,
-        price: quote.regularMarketPrice,
-        change: quote.regularMarketChange,
-        changePercent: quote.regularMarketChangePercent,
-        prevClose: quote.regularMarketPreviousClose,
+    indiceQuotes.forEach(q => {
+      indices[q.symbol] = {
+        symbol: q.symbol,
+        name: q.shortName || q.longName || q.symbol,
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        changePercent: q.regularMarketChangePercent,
+        prevClose: q.regularMarketPreviousClose,
       };
     });
 
-    res.json({
-      indices,
-      marketStatus: 'open',
-      lastUpdated: new Date().toISOString(),
-    });
+    // Normalize movers
+    const stocks = moverQuotes.map(q => ({
+      symbol: q.symbol,
+      name: q.shortName || q.symbol.replace('.NS', ''),
+      price: +(q.regularMarketPrice || 0).toFixed(2),
+      change: +(q.regularMarketChange || 0).toFixed(2),
+      changePercent: +(q.regularMarketChangePercent || 0).toFixed(2),
+      volume: q.regularMarketVolume || 0,
+    }));
+
+    const sorted = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
+    const gainers   = sorted.slice(0, 6);
+    const losers    = sorted.slice(-6).reverse();
+    const mostActive = [...stocks].sort((a, b) => b.volume - a.volume).slice(0, 6);
+
+    res.json({ indices, gainers, losers, mostActive, marketStatus: 'open', lastUpdated: new Date().toISOString() });
   } catch (error) {
     console.error('Error fetching market overview:', error);
     res.status(500).json({ error: 'Failed to fetch market data' });
