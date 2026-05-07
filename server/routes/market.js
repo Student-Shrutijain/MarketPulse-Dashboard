@@ -32,11 +32,16 @@ router.get('/overview', async (req, res) => {
 
     const sectorSymbols = Object.values(SECTOR_PROXIES);
 
+    console.log('Fetching market quotes for indices, movers, and sectors...');
     const [indiceQuotes, moverQuotes, sectorQuotes] = await Promise.all([
-      yahooFinance.quote(['^NSEI', '^BSESN', 'GC=F', 'USDINR=X', 'EURINR=X', 'GBPINR=X']),
-      yahooFinance.quote(NSE_POOL),
-      yahooFinance.quote(sectorSymbols)
+      yahooFinance.quote(['^NSEI', '^BSESN', 'GC=F', 'USDINR=X', 'EURINR=X', 'GBPINR=X']).catch(e => { console.error('Indices fetch failed:', e.message); return []; }),
+      yahooFinance.quote(NSE_POOL).catch(e => { console.error('Movers fetch failed:', e.message); return []; }),
+      yahooFinance.quote(sectorSymbols).catch(e => { console.error('Sectors fetch failed:', e.message); return []; })
     ]);
+
+    if (indiceQuotes.length === 0 && moverQuotes.length === 0) {
+      console.warn('Yahoo Finance returned no data. Check for rate limits or region blocks.');
+    }
 
     // Build indices map
     const indices = {};
@@ -78,14 +83,15 @@ router.get('/overview', async (req, res) => {
       return {
         name,
         change: q ? +(q.regularMarketChangePercent || 0).toFixed(2) : 0,
-        value: q ? +(q.regularMarketVolume || 0) : 0, // Using volume as heatmap size indicator
+        value: q ? +(q.regularMarketVolume || 0) : 0,
       };
     });
 
+    console.log(`Market overview prepared. Indices: ${Object.keys(indices).length}, Movers: ${stocks.length}`);
     res.json({ indices, gainers, losers, mostActive, sectors, marketStatus: 'open', lastUpdated: new Date().toISOString() });
   } catch (error) {
-    console.error('Error fetching market overview:', error);
-    res.status(500).json({ error: 'Failed to fetch market data' });
+    console.error('CRITICAL Error fetching market overview:', error.message);
+    res.status(500).json({ error: 'Failed to fetch market data', details: error.message });
   }
 });
 
