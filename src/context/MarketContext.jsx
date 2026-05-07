@@ -160,13 +160,11 @@ export function MarketProvider({ children }) {
     if (hasFetched.current) setLoading(true);
     try {
       const [marketRes, newsRes] = await Promise.all([
-        axios.get(`${API}/market/overview`),
+        axios.get(`${API}/market/overview`).catch(() => ({ data: {} })),
         axios.get(`${API}/news`).catch(() => ({ data: [] }))
       ]);
 
       const data = marketRes.data;
-      console.log('Production Market Data Received:', !!data.indices);
-      
       if (data.indices) setIndices(prev => mergeWithSparklines(prev, data.indices));
       if (data.gainers) setGainers(data.gainers);
       if (data.losers) setLosers(data.losers);
@@ -178,9 +176,8 @@ export function MarketProvider({ children }) {
       }
       setLastUpdated(new Date());
     } catch (err) {
-      console.error('PROD API ERROR:', err.response?.status, err.message);
-      if (err.response?.data) console.error('Error Details:', err.response.data);
-      // Fallback to demo only if strictly necessary
+      console.error('Failed to fetch market data', err);
+      // Keep showing demo data on failure
     } finally {
       setLoading(false);
       setInitialLoading(false);

@@ -39,36 +39,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Serve static assets
-const distPath = path.join(__dirname, '../dist');
-app.use(express.static(distPath));
-
-// For any request that doesn't match an API route, send index.html
-app.get('*path', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-  // Check if index.html exists before sending, otherwise just 404
-  const indexPath = path.join(distPath, 'index.html');
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      // In development, we might not have a dist folder yet
-      if (process.env.NODE_ENV !== 'production') {
-        return res.status(404).send('Finance Dashboard API is running. Build the frontend to see the UI.');
-      }
-      next();
-    }
-  });
-});
-
 const { default: YahooFinance } = require('yahoo-finance2');
-const yahooFinance = new YahooFinance({ 
-  suppressNotices: ['yahooSurvey'],
-  queue: { concurrency: 1 }
-});
-
-// Set a custom User-Agent to look like a real browser
-yahooFinance._env.set({
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-});
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 // WebSocket for live updates
 const activeSubscriptions = new Map(); // socket.id -> Set of symbols
@@ -193,7 +165,7 @@ setInterval(async () => {
       console.error('Error fetching live quotes:', err.message);
     }
   }
-}, 20000); // 20 second polling for production stability
+}, 5000); // 5 second polling
 
 const PORT = process.env.PORT || 5001;
 

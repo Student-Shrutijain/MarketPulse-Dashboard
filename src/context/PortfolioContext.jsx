@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
+import socket from '../services/socket';
 
 const PortfolioContext = createContext();
 const API = '/api';
@@ -42,10 +43,9 @@ export function PortfolioProvider({ children }) {
     ];
 
     if (allSymbols.length > 0) {
-      import('../services/socket').then(({ default: socket }) => {
-        socket.emit('subscribe', allSymbols);
+      socket.emit('subscribe', allSymbols);
 
-        const handlePriceUpdate = (updates) => {
+      const handlePriceUpdate = (updates) => {
           setWatchlist(prev => {
             let changed = false;
             const updated = prev.map(w => {
@@ -79,10 +79,9 @@ export function PortfolioProvider({ children }) {
         socket.on('price-update', handlePriceUpdate);
 
         return () => {
-          socket.off('price-update', handlePriceUpdate);
-          socket.emit('unsubscribe', allSymbols);
-        };
-      });
+        socket.off('price-update', handlePriceUpdate);
+        socket.emit('unsubscribe', allSymbols);
+      };
     }
   }, [watchlist, holdings]);
 
