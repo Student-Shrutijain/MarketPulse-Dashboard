@@ -60,7 +60,15 @@ app.get('*path', (req, res, next) => {
 });
 
 const { default: YahooFinance } = require('yahoo-finance2');
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+const yahooFinance = new YahooFinance({ 
+  suppressNotices: ['yahooSurvey'],
+  queue: { concurrency: 1 }
+});
+
+// Set a custom User-Agent to look like a real browser
+yahooFinance._env.set({
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+});
 
 // WebSocket for live updates
 const activeSubscriptions = new Map(); // socket.id -> Set of symbols
