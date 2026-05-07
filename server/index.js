@@ -189,9 +189,9 @@ const PORT = process.env.PORT || 5001;
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('\n✅ Connected to MongoDB Atlas');
-    server.listen(PORT, () => {
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 MarketPulse API running on port ${PORT}`);
-      console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+      console.log(`   Health: http://0.0.0.0:${PORT}/api/health\n`);
     });
   })
   .catch((err) => {
