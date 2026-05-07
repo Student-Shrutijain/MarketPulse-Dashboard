@@ -44,7 +44,7 @@ const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
 
 // For any request that doesn't match an API route, send index.html
-app.get('(.*)', (req, res, next) => {
+app.get('*path', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   // Check if index.html exists before sending, otherwise just 404
   const indexPath = path.join(distPath, 'index.html');
