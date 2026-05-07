@@ -1,17 +1,70 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import SectorHeatmap from '../components/SectorHeatmap';
 import { useMarket } from '../context/MarketContext';
-import { Zap, TrendingUp, TrendingDown, BarChart3, Globe } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Zap, TrendingUp, TrendingDown, BarChart3, Globe, Lock } from 'lucide-react';
 import './Insights.css';
 
 export default function InsightsPage() {
-  const { indices, sectors } = useMarket();
+  const { user } = useAuth();
+  const { gainers, losers, sectors } = useMarket();
+  const [performance, setPerformance] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const movingMarket = [
-    { title: 'Banking stocks rally on strong Q4 results expectations', impact: 'positive', assets: ['HDFCBANK', 'ICICIBANK', 'SBIN'] },
-    { title: 'Crude oil spikes to $85/barrel — energy stocks gain', impact: 'positive', assets: ['RELIANCE', 'ONGC'] },
-    { title: 'IT sector faces headwinds from US recession fears', impact: 'negative', assets: ['TCS', 'INFY', 'WIPRO'] },
-    { title: 'Gold safe-haven demand rising amid geopolitical tensions', impact: 'positive', assets: ['GOLD'] },
-  ];
+  useEffect(() => {
+    const fetchPerformance = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data } = await axios.get('/api/market/performance');
+        setPerformance(data);
+      } catch (error) {
+        console.error('Failed to fetch performance:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPerformance();
+  }, [user]);
+
+  const movingMarket = [];
+  if (gainers && gainers.length > 0) {
+    movingMarket.push({
+      title: 'Strong buying momentum in top gainers',
+      impact: 'positive',
+      assets: gainers.slice(0, 3).map(g => g.symbol.replace('.NS', ''))
+    });
+  }
+  if (sectors && sectors.length > 0) {
+    const sortedSectors = [...sectors].sort((a,b) => b.change - a.change);
+    const topSector = sortedSectors[0];
+    const bottomSector = sortedSectors[sortedSectors.length - 1];
+    
+    if (topSector && topSector.change > 0) {
+      movingMarket.push({
+        title: `${topSector.name} sector leads the market rally`,
+        impact: 'positive',
+        assets: [topSector.name]
+      });
+    }
+    if (bottomSector && bottomSector.change < 0) {
+      movingMarket.push({
+        title: `${bottomSector.name} sector dragging down overall sentiment`,
+        impact: 'negative',
+        assets: [bottomSector.name]
+      });
+    }
+  }
+  if (losers && losers.length > 0) {
+    movingMarket.push({
+      title: 'Selling pressure observed in underperforming stocks',
+      impact: 'negative',
+      assets: losers.slice(0, 3).map(l => l.symbol.replace('.NS', ''))
+    });
+  }
 
   return (
     <div className="page-container animate-fade-in">
@@ -29,7 +82,7 @@ export default function InsightsPage() {
           What's Moving the Market Today
         </h2>
         <div className="moving-items">
-          {movingMarket.map((item, i) => (
+          {movingMarket.length > 0 ? movingMarket.map((item, i) => (
             <div key={i} className="moving-item" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="moving-indicator">
                 {item.impact === 'positive' ? (
@@ -47,7 +100,9 @@ export default function InsightsPage() {
                 </div>
               </div>
             </div>
-          ))}
+          )) : (
+            <p className="text-muted" style={{ fontSize: '0.875rem' }}>Gathering live market data...</p>
+          )}
         </div>
       </div>
 
@@ -61,31 +116,39 @@ export default function InsightsPage() {
           Historical Performance Summary
         </h2>
         <div className="perf-grid">
-          {[
-            { name: 'NIFTY 50', '1D': '+0.65%', '1W': '+1.2%', '1M': '+3.4%', '3M': '+8.2%', '6M': '+12.1%', '1Y': '+18.5%' },
-            { name: 'SENSEX', '1D': '+0.65%', '1W': '+1.1%', '1M': '+3.2%', '3M': '+7.8%', '6M': '+11.5%', '1Y': '+17.8%' },
-            { name: 'NIFTY Bank', '1D': '+1.8%', '1W': '+2.5%', '1M': '+5.1%', '3M': '+10.3%', '6M': '+15.2%', '1Y': '+22.4%' },
-            { name: 'NIFTY IT', '1D': '-1.2%', '1W': '-2.1%', '1M': '-4.5%', '3M': '-1.8%', '6M': '+3.2%', '1Y': '+5.1%' },
-            { name: 'Gold', '1D': '+0.38%', '1W': '+1.5%', '1M': '+4.2%', '3M': '+8.5%', '6M': '+15.8%', '1Y': '+22.1%' },
-          ].map(row => (
-            <div key={row.name} className="perf-row">
-              <span className="perf-name">{row.name}</span>
-              {['1D', '1W', '1M', '3M', '6M', '1Y'].map(period => (
-                <span
-                  key={period}
-                  className={`perf-cell font-mono ${row[period].startsWith('+') ? 'text-green' : 'text-red'}`}
-                >
-                  {row[period]}
-                </span>
-              ))}
+          {loading ? (
+            <p className="text-muted" style={{ fontSize: '0.875rem', padding: '20px' }}>Loading historical data...</p>
+          ) : !user ? (
+            <div className="flex-center" style={{ padding: '40px', flexDirection: 'column', gap: '12px' }}>
+              <Lock size={24} style={{ color: 'var(--text-tertiary)' }} />
+              <p className="text-muted" style={{ fontSize: '0.9rem' }}>Historical performance is restricted to members.</p>
+              <button className="btn btn-primary btn-sm" onClick={() => window.location.href='/login'}>Sign In to View</button>
             </div>
-          ))}
-          <div className="perf-header">
-            <span></span>
-            {['1D', '1W', '1M', '3M', '6M', '1Y'].map(p => (
-              <span key={p} className="perf-period">{p}</span>
-            ))}
-          </div>
+          ) : performance.length > 0 ? (
+            <>
+              {performance.map(row => (
+                <div key={row.name} className="perf-row">
+                  <span className="perf-name">{row.name}</span>
+                  {['1D', '1W', '1M', '3M', '6M', '1Y'].map(period => (
+                    <span
+                      key={period}
+                      className={`perf-cell font-mono ${row[period].startsWith('+') ? 'text-green' : row[period].startsWith('-') ? 'text-red' : ''}`}
+                    >
+                      {row[period]}
+                    </span>
+                  ))}
+                </div>
+              ))}
+              <div className="perf-header">
+                <span></span>
+                {['1D', '1W', '1M', '3M', '6M', '1Y'].map(p => (
+                  <span key={p} className="perf-period">{p}</span>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-muted" style={{ fontSize: '0.875rem', padding: '20px' }}>No performance data available.</p>
+          )}
         </div>
       </div>
     </div>

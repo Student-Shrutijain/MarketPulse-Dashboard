@@ -1,24 +1,11 @@
 const express = require('express');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
 const router = express.Router();
+const authMiddleware = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'marketpulse_jwt_secret';
-
-// Middleware: Verify token
-function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'No token provided' });
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-}
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {

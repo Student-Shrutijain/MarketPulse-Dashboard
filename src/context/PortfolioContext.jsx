@@ -1,76 +1,154 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useAuth } from './AuthContext';
 
 const PortfolioContext = createContext();
 const API = '/api';
 
-const DEMO_WATCHLIST = [
-  { symbol: 'RELIANCE.NS', name: 'Reliance Industries', price: 2945.80, change: 32.40, changePercent: 1.11 },
-  { symbol: 'TCS.NS', name: 'Tata Consultancy', price: 3890.25, change: -15.60, changePercent: -0.40 },
-  { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', price: 1625.40, change: 12.80, changePercent: 0.79 },
-  { symbol: 'INFY.NS', name: 'Infosys', price: 1485.70, change: 22.30, changePercent: 1.52 },
-];
-
-const DEMO_HOLDINGS = [
-  { symbol: 'RELIANCE.NS', name: 'Reliance', qty: 10, avgPrice: 2800, currentPrice: 2945.80 },
-  { symbol: 'TCS.NS', name: 'TCS', qty: 5, avgPrice: 3950, currentPrice: 3890.25 },
-  { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', qty: 15, avgPrice: 1580, currentPrice: 1625.40 },
-  { symbol: 'INFY.NS', name: 'Infosys', qty: 20, avgPrice: 1420, currentPrice: 1485.70 },
-  { symbol: 'ICICIBANK.NS', name: 'ICICI Bank', qty: 12, avgPrice: 1150, currentPrice: 1180.90 },
-];
-
 export function PortfolioProvider({ children }) {
-  const [watchlist, setWatchlist] = useState(DEMO_WATCHLIST);
-  const [holdings, setHoldings] = useState(DEMO_HOLDINGS);
+  const { user } = useAuth();
+  const [watchlist, setWatchlist] = useState([]);
+  const [holdings, setHoldings] = useState([]);
 
   const totalInvested = holdings.reduce((sum, h) => sum + h.qty * h.avgPrice, 0);
   const totalCurrent = holdings.reduce((sum, h) => sum + h.qty * h.currentPrice, 0);
   const totalPnL = totalCurrent - totalInvested;
   const totalPnLPercent = totalInvested > 0 ? ((totalPnL / totalInvested) * 100).toFixed(2) : 0;
 
-  const addToWatchlist = useCallback((stock) => {
-    setWatchlist(prev => {
-      if (prev.find(w => w.symbol === stock.symbol)) return prev;
-      return [...prev, stock];
-    });
-  }, []);
+  const fetchPortfolio = useCallback(async () => {
+    if (!user) {
+      setWatchlist([]);
+      setHoldings([]);
+      return;
+    }
+    try {
+      const { data } = await axios.get(`${API}/portfolio`);
+      setWatchlist(data.watchlist || []);
+      setHoldings(data.holdings || []);
+    } catch (err) {
+      console.error('Failed to fetch portfolio', err);
+    }
+  }, [user]);
 
-  const removeFromWatchlist = useCallback((symbol) => {
-    setWatchlist(prev => prev.filter(w => w.symbol !== symbol));
-  }, []);
-
-  const addHolding = useCallback((holding) => {
-    setHoldings(prev => [...prev, holding]);
-  }, []);
-
-  const removeHolding = useCallback((symbol) => {
-    setHoldings(prev => prev.filter(h => h.symbol !== symbol));
-  }, []);
-
-  const updateHolding = useCallback((symbol, updates) => {
-    setHoldings(prev => prev.map(h => h.symbol === symbol ? { ...h, ...updates } : h));
-  }, []);
-
-  // Simulate live price updates for holdings
   useEffect(() => {
-    const interval = setInterval(() => {
-      setHoldings(prev => prev.map(h => {
-        const delta = (Math.random() - 0.48) * h.currentPrice * 0.001;
-        return { ...h, currentPrice: +(h.currentPrice + delta).toFixed(2) };
-      }));
-      setWatchlist(prev => prev.map(w => {
-        const delta = (Math.random() - 0.48) * w.price * 0.001;
-        const newPrice = +(w.price + delta).toFixed(2);
-        const newChange = +(w.change + delta).toFixed(2);
-        return {
-          ...w,
-          price: newPrice,
-          change: newChange,
-          changePercent: +((newChange / (newPrice - newChange)) * 100).toFixed(2)
+    fetchPortfolio();
+  }, [fetchPortfolio]);
+
+  // Connect to socket and update holdings/watchlist live
+  useEffect(() => {
+    const allSymbols = [
+      ...watchlist.map(w => w.symbol),
+      ...holdings.map(h => h.symbol)
+    ];
+
+    if (allSymbols.length > 0) {
+      import('../services/socket').then(({ default: socket }) => {
+        socket.emit('subscribe', allSymbols);
+
+        const handlePriceUpdate = (updates) => {
+          setWatchlist(prev => {
+            let changed = false;
+            const updated = prev.map(w => {
+              if (updates[w.symbol]) {
+                changed = true;
+                return {
+                  ...w,
+                  price: updates[w.symbol].price,
+                  change: updates[w.symbol].change,
+                  changePercent: updates[w.symbol].changePercent,
+                };
+              }
+              return w;
+            });
+            return changed ? updated : prev;
+          });
+
+          setHoldings(prev => {
+            let changed = false;
+            const updated = prev.map(h => {
+              if (updates[h.symbol]) {
+                changed = true;
+                return { ...h, currentPrice: updates[h.symbol].price };
+              }
+              return h;
+            });
+            return changed ? updated : prev;
+          });
         };
-      }));
-    }, 4000);
-    return () => clearInterval(interval);
+
+        socket.on('price-update', handlePriceUpdate);
+
+        return () => {
+          socket.off('price-update', handlePriceUpdate);
+          socket.emit('unsubscribe', allSymbols);
+        };
+      });
+    }
+  }, [watchlist, holdings]);
+
+  const addToWatchlist = useCallback(async (stock) => {
+    try {
+      if (!user) {
+        alert('Please log in to add items to your Watchlist.');
+        return;
+      }
+      const { data } = await axios.post(`${API}/portfolio/watchlist`, {
+        symbol: stock.symbol
+      });
+      setWatchlist(data.watchlist || []);
+    } catch (err) {
+      console.error('Failed to add to watchlist', err);
+    }
+  }, [user]);
+
+  const removeFromWatchlist = useCallback(async (symbol) => {
+    try {
+      if (!user) {
+        alert('Please log in to modify your Watchlist.');
+        return;
+      }
+      const { data } = await axios.delete(`${API}/portfolio/watchlist/${encodeURIComponent(symbol)}`);
+      setWatchlist(data.watchlist || []);
+    } catch (err) {
+      console.error('Failed to remove from watchlist', err);
+    }
+  }, [user]);
+
+  const addHolding = useCallback(async (holding) => {
+    try {
+      if (!user) {
+        alert('Please log in to add items to your Portfolio Holdings.');
+        return;
+      }
+      const { data } = await axios.post(`${API}/portfolio/holdings`, {
+        symbol: holding.symbol,
+        qty: holding.qty,
+        avgPrice: holding.avgPrice
+      });
+      setHoldings(data.holdings || []);
+    } catch (err) {
+      console.error('Failed to add holding', err);
+    }
+  }, [user]);
+
+  const removeHolding = useCallback(async (symbol) => {
+    try {
+      if (!user) {
+        alert('Please log in to modify your Portfolio Holdings.');
+        return;
+      }
+      const { data } = await axios.delete(`${API}/portfolio/holdings/${encodeURIComponent(symbol)}`);
+      setHoldings(data.holdings || []);
+    } catch (err) {
+      console.error('Failed to remove holding', err);
+    }
+  }, [user]);
+
+  const updateHolding = useCallback(async (symbol, updates) => {
+    // Currently updating a holding isn't implemented in the backend,
+    // so we'll just optimistically update the state for now, 
+    // or remove and re-add in the backend in a full implementation.
+    setHoldings(prev => prev.map(h => h.symbol === symbol ? { ...h, ...updates } : h));
   }, []);
 
   return (
@@ -79,6 +157,7 @@ export function PortfolioProvider({ children }) {
       totalInvested, totalCurrent, totalPnL, totalPnLPercent,
       addToWatchlist, removeFromWatchlist,
       addHolding, removeHolding, updateHolding,
+      setHoldings, setWatchlist // Expose setters for socket.io updates later
     }}>
       {children}
     </PortfolioContext.Provider>

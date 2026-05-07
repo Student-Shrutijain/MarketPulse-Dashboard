@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
+import socket from '../services/socket';
 
 const MarketContext = createContext();
 
@@ -82,51 +83,77 @@ export function MarketProvider({ children }) {
   const priceFlash = useRef({});
   const hasFetched = useRef(false);
 
-  // Simulate live price updates
+  // Connect to real-time socket and listen for price updates
   useEffect(() => {
-    const interval = setInterval(() => {
+    // When the data is fetched, subscribe to all symbols we have
+    const allSymbols = [
+      ...Object.keys(indices),
+      ...gainers.map(g => g.symbol),
+      ...losers.map(l => l.symbol),
+      ...mostActive.map(m => m.symbol)
+    ];
+    if (allSymbols.length > 0) {
+      socket.emit('subscribe', allSymbols);
+    }
+
+    const handlePriceUpdate = (updates) => {
+      // Updates indices
       setIndices(prev => {
         const updated = { ...prev };
+        let changed = false;
         Object.keys(updated).forEach(key => {
-          const item = { ...updated[key] };
-          const delta = (Math.random() - 0.48) * item.price * 0.001;
-          item.prevPrice = item.price;
-          item.price = +(item.price + delta).toFixed(2);
-          item.change = +(item.price - item.prevClose).toFixed(2);
-          item.changePercent = +((item.change / item.prevClose) * 100).toFixed(2);
-          item.sparkline = [...item.sparkline.slice(1), item.price];
-          item.flashDirection = delta > 0 ? 'up' : 'down';
-          updated[key] = item;
+          if (updates[key]) {
+            changed = true;
+            const item = { ...updated[key] };
+            const newPrice = updates[key].price;
+            item.flashDirection = newPrice > item.price ? 'up' : newPrice < item.price ? 'down' : item.flashDirection;
+            item.prevPrice = item.price;
+            item.price = newPrice;
+            item.change = updates[key].change;
+            item.changePercent = updates[key].changePercent;
+            item.sparkline = [...item.sparkline.slice(1), item.price];
+            updated[key] = item;
+          }
         });
-        return updated;
+        return changed ? updated : prev;
       });
-      setLastUpdated(new Date());
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
-  // Simulate market mover updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const updateList = (list) => list.map(item => {
-        const delta = (Math.random() - 0.48) * item.price * 0.002;
-        const newPrice = +(item.price + delta).toFixed(2);
-        const newChange = +(item.change + delta).toFixed(2);
-        return {
-          ...item,
-          prevPrice: item.price,
-          price: newPrice,
-          change: newChange,
-          changePercent: +((newChange / (newPrice - newChange)) * 100).toFixed(2),
-          flashDirection: delta > 0 ? 'up' : 'down',
-        };
-      });
+      // Helper to update a list (gainers, losers, mostActive)
+      const updateList = (list) => {
+        let changed = false;
+        const newList = list.map(item => {
+          if (updates[item.symbol]) {
+            changed = true;
+            const newPrice = updates[item.symbol].price;
+            return {
+              ...item,
+              prevPrice: item.price,
+              price: newPrice,
+              change: updates[item.symbol].change,
+              changePercent: updates[item.symbol].changePercent,
+              flashDirection: newPrice > item.price ? 'up' : newPrice < item.price ? 'down' : item.flashDirection,
+            };
+          }
+          return item;
+        });
+        return changed ? newList : list;
+      };
+
       setGainers(prev => updateList(prev));
       setLosers(prev => updateList(prev));
       setMostActive(prev => updateList(prev));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+      setLastUpdated(new Date());
+    };
+
+    socket.on('price-update', handlePriceUpdate);
+
+    return () => {
+      socket.off('price-update', handlePriceUpdate);
+      if (allSymbols.length > 0) {
+        socket.emit('unsubscribe', allSymbols);
+      }
+    };
+  }, [indices, gainers, losers, mostActive]);
 
   const fetchMarketData = useCallback(async () => {
     // Only show background spinner on re-fetches, not initial
@@ -142,6 +169,7 @@ export function MarketProvider({ children }) {
       if (data.gainers) setGainers(data.gainers);
       if (data.losers) setLosers(data.losers);
       if (data.mostActive) setMostActive(data.mostActive);
+      if (data.sectors) setSectors(data.sectors);
 
       if (newsRes.data && newsRes.data.length > 0) {
         setNews(newsRes.data);

@@ -50,7 +50,7 @@ export default function Navbar({ onSearch }) {
     debounceTimer.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const res = await fetch(`http://localhost:5001/api/market/search?q=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(`/api/market/search?q=${encodeURIComponent(searchQuery)}`);
         const data = await res.json();
         setSuggestions(data || []);
       } catch {

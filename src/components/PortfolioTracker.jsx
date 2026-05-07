@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
+import { useAuth } from '../context/AuthContext';
 import { Briefcase, Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import './Portfolio.css';
 
 export default function PortfolioTracker() {
+  const { user } = useAuth();
   const { holdings, totalInvested, totalCurrent, totalPnL, totalPnLPercent, addHolding, removeHolding } = usePortfolio();
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ symbol: '', name: '', qty: '', avgPrice: '', currentPrice: '' });
@@ -12,10 +14,8 @@ export default function PortfolioTracker() {
     if (!form.symbol || !form.qty || !form.avgPrice) return;
     addHolding({
       symbol: form.symbol.toUpperCase() + '.NS',
-      name: form.name || form.symbol,
       qty: Number(form.qty),
       avgPrice: Number(form.avgPrice),
-      currentPrice: Number(form.currentPrice || form.avgPrice),
     });
     setForm({ symbol: '', name: '', qty: '', avgPrice: '', currentPrice: '' });
     setShowAdd(false);
@@ -64,9 +64,11 @@ export default function PortfolioTracker() {
             <Briefcase size={20} style={{ color: 'var(--accent-primary)' }} />
             Your Holdings
           </h2>
-          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(!showAdd)}>
-            <Plus size={14} /> Add Holding
-          </button>
+          {user && (
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(!showAdd)}>
+              <Plus size={14} /> Add Holding
+            </button>
+          )}
         </div>
 
         {showAdd && (
@@ -122,9 +124,11 @@ export default function PortfolioTracker() {
                       </span>
                     </td>
                     <td>
-                      <button className="btn-icon" onClick={() => removeHolding(h.symbol)} title="Remove">
-                        <Trash2 size={14} />
-                      </button>
+                      {user && (
+                        <button className="btn-icon" onClick={() => removeHolding(h.symbol)} title="Remove">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

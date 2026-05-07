@@ -1,9 +1,31 @@
+import { useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { Eye, X, TrendingUp, TrendingDown, Plus, Star } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Eye, X, TrendingUp, TrendingDown, Plus, Star, Check } from 'lucide-react';
 import './Watchlist.css';
 
 export default function WatchlistPanel() {
-  const { watchlist, removeFromWatchlist } = usePortfolio();
+  const { user } = useAuth();
+  const { watchlist, removeFromWatchlist, addToWatchlist } = usePortfolio();
+  const [isAdding, setIsAdding] = useState(false);
+  const [newSymbol, setNewSymbol] = useState('');
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!newSymbol.trim()) return;
+    
+    let formattedSymbol = newSymbol.trim().toUpperCase();
+    if (!formattedSymbol.includes('.')) {
+      formattedSymbol += '.NS';
+    }
+
+    await addToWatchlist({ 
+      symbol: formattedSymbol 
+    });
+    
+    setNewSymbol('');
+    setIsAdding(false);
+  };
 
   return (
     <div className="watchlist-section" id="watchlist">
@@ -12,10 +34,32 @@ export default function WatchlistPanel() {
           <Eye size={20} style={{ color: 'var(--accent-primary)' }} />
           Watchlist
         </h2>
-        <button className="btn btn-secondary btn-sm">
-          <Plus size={14} /> Add
-        </button>
+        {user && (
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => setIsAdding(!isAdding)}
+          >
+            {isAdding ? <X size={14} /> : <Plus size={14} />} {isAdding ? 'Cancel' : 'Add'}
+          </button>
+        )}
       </div>
+
+      {isAdding && (
+        <form onSubmit={handleAdd} className="watchlist-add-form animate-fade-in" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <input 
+            type="text" 
+            className="input" 
+            placeholder="Stock Symbol (e.g., INFY)" 
+            value={newSymbol}
+            onChange={(e) => setNewSymbol(e.target.value)}
+            autoFocus
+            style={{ flex: 1 }}
+          />
+          <button type="submit" className="btn btn-primary btn-sm">
+            <Check size={14} /> Save
+          </button>
+        </form>
+      )}
 
       <div className="watchlist-grid">
         {watchlist.map((item, i) => {
@@ -34,9 +78,11 @@ export default function WatchlistPanel() {
                     <span className="watchlist-name">{item.name}</span>
                   </div>
                 </div>
-                <button className="btn-icon watchlist-remove" onClick={() => removeFromWatchlist(item.symbol)}>
-                  <X size={14} />
-                </button>
+                {user && (
+                  <button className="btn-icon watchlist-remove" onClick={() => removeFromWatchlist(item.symbol)}>
+                    <X size={14} />
+                  </button>
+                )}
               </div>
               <div className="watchlist-price-row">
                 <span className="watchlist-price font-mono">₹{item.price?.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>

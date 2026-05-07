@@ -15,7 +15,7 @@ export default function AssetDetailsPage() {
     const fetchAssetData = async () => {
       setLoading(true);
       try {
-        const quoteRes = await axios.get(`http://localhost:5001/api/market/quote/${symbol}`);
+        const quoteRes = await axios.get(`/api/market/quote/${symbol}`);
         setQuote(quoteRes.data);
       } catch (err) {
         console.error('Failed to fetch asset details:', err);

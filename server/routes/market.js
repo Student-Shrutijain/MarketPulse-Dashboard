@@ -19,9 +19,23 @@ const NSE_POOL = [
 // GET /api/market/overview
 router.get('/overview', async (req, res) => {
   try {
-    const [indiceQuotes, moverQuotes] = await Promise.all([
+    const SECTOR_PROXIES = {
+      'Banking': 'BANKBEES.NS',
+      'IT': 'ITBEES.NS',
+      'Pharma': 'PHARMABEES.NS',
+      'Auto': 'AUTOBEES.NS',
+      'FMCG': 'FMCGBEES.NS',
+      'Energy/PSU': 'CPSEETF.NS',
+      'Gold': 'GOLDBEES.NS',
+      'Midcap': 'MID150BEES.NS'
+    };
+
+    const sectorSymbols = Object.values(SECTOR_PROXIES);
+
+    const [indiceQuotes, moverQuotes, sectorQuotes] = await Promise.all([
       yahooFinance.quote(['^NSEI', '^BSESN', 'GC=F', 'USDINR=X', 'EURINR=X', 'GBPINR=X']),
-      yahooFinance.quote(NSE_POOL)
+      yahooFinance.quote(NSE_POOL),
+      yahooFinance.quote(sectorSymbols)
     ]);
 
     // Build indices map
@@ -52,7 +66,23 @@ router.get('/overview', async (req, res) => {
     const losers    = sorted.slice(-6).reverse();
     const mostActive = [...stocks].sort((a, b) => b.volume - a.volume).slice(0, 6);
 
-    res.json({ indices, gainers, losers, mostActive, marketStatus: 'open', lastUpdated: new Date().toISOString() });
+    // Build sectors array
+    const sectorMap = {};
+    sectorQuotes.forEach(q => {
+      sectorMap[q.symbol] = q;
+    });
+
+    const sectors = Object.keys(SECTOR_PROXIES).map(name => {
+      const symbol = SECTOR_PROXIES[name];
+      const q = sectorMap[symbol];
+      return {
+        name,
+        change: q ? +(q.regularMarketChangePercent || 0).toFixed(2) : 0,
+        value: q ? +(q.regularMarketVolume || 0) : 0, // Using volume as heatmap size indicator
+      };
+    });
+
+    res.json({ indices, gainers, losers, mostActive, sectors, marketStatus: 'open', lastUpdated: new Date().toISOString() });
   } catch (error) {
     console.error('Error fetching market overview:', error);
     res.status(500).json({ error: 'Failed to fetch market data' });
@@ -164,6 +194,82 @@ router.get('/history/:symbol', async (req, res) => {
   } catch (error) {
     console.error('Error fetching history for', req.params.symbol, error);
     res.status(500).json({ error: 'Failed to fetch historical data' });
+  }
+});
+
+// GET /api/market/quotes?symbols=...
+router.get('/quotes', async (req, res) => {
+  try {
+    const { symbols } = req.query;
+    if (!symbols) return res.json([]);
+    const symbolArray = symbols.split(',').filter(s => s.trim().length > 0);
+    if (symbolArray.length === 0) return res.json([]);
+    
+    const quotes = await yahooFinance.quote(symbolArray);
+    const result = quotes.map(q => ({
+      symbol: q.symbol,
+      name: q.shortName || q.longName || q.symbol.replace('.NS', ''),
+      price: +(q.regularMarketPrice || 0).toFixed(2),
+      change: +(q.regularMarketChange || 0).toFixed(2),
+      changePercent: +(q.regularMarketChangePercent || 0).toFixed(2),
+    }));
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching bulk quotes:', error);
+    res.status(500).json({ error: 'Failed to fetch bulk quotes' });
+  }
+});
+
+// GET /api/market/performance
+router.get('/performance', async (req, res) => {
+  try {
+    const indices = [
+      { symbol: '^NSEI', name: 'NIFTY 50' },
+      { symbol: '^BSESN', name: 'SENSEX' },
+      { symbol: 'BANKBEES.NS', name: 'NIFTY Bank' },
+      { symbol: 'ITBEES.NS', name: 'NIFTY IT' },
+      { symbol: 'GOLDBEES.NS', name: 'Gold' }
+    ];
+
+    const results = await Promise.all(
+      indices.map(async (idx) => {
+        try {
+          const chart = await yahooFinance.chart(idx.symbol, { range: '1y', interval: '1d' });
+          const quotes = chart.quotes.filter(q => q.close > 0);
+          if (quotes.length === 0) throw new Error('No data');
+
+          const latest = quotes[quotes.length - 1].close;
+          
+          const getChange = (daysAgo) => {
+            const pastQuote = quotes[Math.max(0, quotes.length - 1 - daysAgo)];
+            if (!pastQuote) return 'N/A';
+            const change = ((latest - pastQuote.close) / pastQuote.close) * 100;
+            return (change > 0 ? '+' : '') + change.toFixed(2) + '%';
+          };
+
+          return {
+            name: idx.name,
+            '1D': getChange(1),
+            '1W': getChange(5), // approx 5 trading days
+            '1M': getChange(21), // approx 21 trading days
+            '3M': getChange(63), // approx 63 trading days
+            '6M': getChange(126), // approx 126 trading days
+            '1Y': getChange(252), // approx 252 trading days
+          };
+        } catch (e) {
+          return {
+            name: idx.name,
+            '1D': 'N/A', '1W': 'N/A', '1M': 'N/A', '3M': 'N/A', '6M': 'N/A', '1Y': 'N/A'
+          };
+        }
+      })
+    );
+
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching performance:', error);
+    res.status(500).json({ error: 'Failed to fetch performance data' });
   }
 });
 

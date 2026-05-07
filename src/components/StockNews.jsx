@@ -12,7 +12,7 @@ export default function StockNews({ symbol, name }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`http://localhost:5001/api/news/${encodeURIComponent(symbol)}`);
+      const res = await axios.get(`/api/news/${encodeURIComponent(symbol)}`);
       setNews(res.data || []);
       setLastFetched(new Date());
     } catch (err) {

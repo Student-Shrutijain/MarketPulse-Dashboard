@@ -98,7 +98,7 @@ export default function StockChart({ symbol = 'RELIANCE.NS', name = 'Reliance In
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:5001/api/market/history/${symbol}?range=${timeframe}`);
+        const res = await axios.get(`/api/market/history/${symbol}?range=${timeframe}`);
         if (isMounted && res.data && res.data.data) {
           const formatted = res.data.data.map(d => {
             const dt = new Date(d.date);
