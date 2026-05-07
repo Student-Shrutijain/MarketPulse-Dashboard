@@ -16,8 +16,22 @@ const NSE_POOL = [
   'TATAPOWER.NS','ZOMATO.NS','IRFC.NS'
 ];
 
+// Simple in-memory cache for production stability
+let marketCache = {
+  data: null,
+  timestamp: 0
+};
+const CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
+
 // GET /api/market/overview
 router.get('/overview', async (req, res) => {
+  // Return cached data if available and fresh
+  const now = Date.now();
+  if (marketCache.data && (now - marketCache.timestamp < CACHE_DURATION)) {
+    console.log('Serving market overview from cache');
+    return res.json(marketCache.data);
+  }
+
   try {
     const SECTOR_PROXIES = {
       'Banking': 'BANKBEES.NS',
@@ -87,8 +101,13 @@ router.get('/overview', async (req, res) => {
       };
     });
 
+    const result = { indices, gainers, losers, mostActive, sectors, marketStatus: 'open', lastUpdated: new Date().toISOString() };
+    
+    // Update cache
+    marketCache = { data: result, timestamp: Date.now() };
+
     console.log(`Market overview prepared. Indices: ${Object.keys(indices).length}, Movers: ${stocks.length}`);
-    res.json({ indices, gainers, losers, mostActive, sectors, marketStatus: 'open', lastUpdated: new Date().toISOString() });
+    res.json(result);
   } catch (error) {
     console.error('CRITICAL Error fetching market overview:', error.message);
     res.status(500).json({ error: 'Failed to fetch market data', details: error.message });

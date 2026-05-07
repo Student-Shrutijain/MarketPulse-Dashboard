@@ -185,7 +185,7 @@ setInterval(async () => {
       console.error('Error fetching live quotes:', err.message);
     }
   }
-}, 5000); // 5 second polling
+}, 20000); // 20 second polling for production stability
 
 const PORT = process.env.PORT || 5001;
 
