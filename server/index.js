@@ -39,6 +39,23 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Serve static assets in production
+const distPath = path.join(__dirname, '../dist');
+app.use(express.static(distPath));
+
+// For any request that doesn't match an API route, send index.html
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('Error sending index.html:', err);
+      }
+      res.status(404).send('Finance Dashboard API is running. Build the frontend to see the UI.');
+    }
+  });
+});
+
 const { default: YahooFinance } = require('yahoo-finance2');
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
