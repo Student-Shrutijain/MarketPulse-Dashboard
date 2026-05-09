@@ -44,7 +44,7 @@ const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
 
 // For any request that doesn't match an API route, send index.html
-app.get('/*', (req, res, next) => {
+app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(distPath, 'index.html'), (err) => {
     if (err) {
